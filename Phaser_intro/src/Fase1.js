@@ -1,133 +1,75 @@
+// Configuração do jogo
+
+//var player;
 
 class Fase1 extends Phaser.Scene{
+    
     preload ()
     {
+        console.log('load spritesheet');
         this.load.spritesheet('player_sp', 'assets/spritesheets/player.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('knaiffs_sp', 'assets/spritesheets/knaiffs.png', {frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('meilin', 'assets/spritesheets/meilin.png', {frameWidth: 64, frameHeight: 64})
-        this.load.image('knife', 'assets/spritesheets/knife.png')
+        
+        console.log('load tile sheet');
         this.load.image('tiles', 'assets/maps/tilesheet.png');
-        this.load.tilemapTiledJSON('themap', 'assets/maps/map2.json');
-        this.load.image('circle', 'assets/spritesheets/magic_circle.png')
-        this.load.image('barrier', 'assets/spritesheets/barrier.png')
-        this.load.image('shield', 'assets/spritesheets/shield.png')
-
-
-
-        this.load.audio('warning', 'assets/ost/warning.wav')
-        this.load.audio('boss', 'assets/ost/boss_ost.mp3')
-        this.load.audio('dash', 'assets/ost/dash.wav')
-        this.load.audio('damage', 'assets/ost/damage.wav')
-        this.load.audio('death', 'assets/ost/death.wav')
+        
+        console.log('load map');
+        this.load.tilemapTiledJSON('themap', 'assets/maps/mapa.json');
+        
+        this.load.image('barrier_sp','assets/spritesheets/barrier.png');
     }
 
 // função para criação dos elementos
     create ()
-    {   
-        this.gameTimer = 0
-
-
-        this.boss_bgm = this.sound.add('boss', {loop: true}).setVolume(0.025)
-        this.warning = this.sound.add('warning').setVolume(0.05)
-        this.dash = this.sound.add('dash').setVolume(0.01)
-        this.damage = this.sound.add('damage').setVolume(0.05)
-        this.death = this.sound.add('death').setVolume(0.05)
-        this.soundPlayed = false
-
-        this.t = Math.PI/2
-        this.circleCenter = {x: 512, y: 384}
-        this.circleRadius = 233
-
-
-         this.storm = false, this.impulse = false,  this.stunned = false, this.boss = false
-
-
-        const messer_pos = {x: 521, y: 151}
-        const player_pos = {x: 35, y: 50}
+    {
 
         // criação do mapa e ligação com a imagem (tilesheet)
         this.map = this.make.tilemap({ key: 'themap', tileWidth: 16, tileHeight: 16 });
         this.tileset = this.map.addTilesetImage('Minifantasy_ForgottenPlainsTiles', 'tiles');
-
+        
         // criação das camadas
         this.groundLayer = this.map.createDynamicLayer('Chao', this.tileset, 0, 0);
         this.wallsLayer = this.map.createDynamicLayer('Parede', this.tileset, 0, 0);
         
+        //criação da barreira
+        this.barrier = this.physics.add.sprite(313, 96, 'barrier_sp', 0);
+        this.barrier.setScale(0.05)
+        this.barrier.setImmovable(true)
         
-        // criação do rei
-        this.player = this.physics.add.sprite(messer_pos.x, messer_pos.y, 'player_sp', 0);
+        this.barrier2 = this.physics.add.sprite(313, 126, 'barrier_sp', 0);
+        this.barrier2.setScale(0.05)
+        this.barrier2.setImmovable(true)
+
+        // criação do personagem
+        this.player = this.physics.add.sprite(65, 750, 'player_sp', 0);
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setZoom(2);
 
         this.player.body.width = 30;
-        this.player.hp = 100
-        this.player.hasShield = true
 
-        // creating Player's shield
-        this.shield = this.physics.add.sprite(this.player.body.x+10,this.player.body.y+10,'shield')
-        this.shield.setScale(0.05)
-        this.shield.setVisible(false)
-        this.shield.body.width = 20
-        this.shield.body.height = 20
-        this.shieldIsUp = false
-        // criação da Meilin 
-
-        this.meilin = this.physics.add.sprite(122, 80, 'meilin', 0)
-        this.meilin.setScale(0.5)
-        this.meilin.setFrame(27)
-        this.physics.add.collider(this.player, this.meilin, (meilin)=> {
-            meilin.body.setImmovable(true)
-            meilin.setVelocity(0)
-        })
-
-
-        // criação do boss messer
-
-
-        this.messer = this.physics.add.sprite(messer_pos.x, messer_pos.y, 'knaiffs_sp', 0);
-        this.messer.setScale(0.5);
-        this.messer.body.setSize(50, 80);
-        this.messer.setFrame(27)
-
-         // Messer's HUD
+        this.naiffsNPC = this.physics.add.sprite(65, 200, 'knaiffs_sp', 0);
+        //reduzindo a escala do npc(era muito grande)
+        this.naiffsNPC.setScale(0.5);
         
-         this.healthWidth = 400;
-         this.healthHeight = 10;
- 
-         this.messer.hp = 1000;
-         this.messerLifeBackground = this.add.rectangle(0, 0, this.healthWidth, this.healthHeight, 0x000000);
-         this.messerLife = this.add.rectangle(0, 0, 0.4*this.messer.hp, this.healthHeight, 0xff0000);
-         this.messerLife.setVisible(false);
-         this.messerLife.setOrigin(0, 0);
-         this.messerLife.setScrollFactor(0);
-         this.messerLife.setDepth(1);
-         this.messerLifeBackground.setVisible(false);
-         this.messerLifeBackground.setOrigin(0, 0);
-         this.messerLifeBackground.setScrollFactor(0);
-         this.messerLifeBackground.setDepth(1); 
- 
-         this.nomeText = this.add.text(0, this.healthHeight + 5, "Messer Kniffes", { fontFamily: 'comic-sans', fontSize: '16px', color: '#ffffff' });
-         this.nomeText.setVisible(false);
-         this.nomeText.setOrigin(0, 0);
-         this.nomeText.setScrollFactor(0);
-         this.nomeText.setDepth(1); 
-         this.messerLifeBackground.setStrokeStyle(2,0x000000);
-         this.nomeText.setStroke('#000000', 4);
-         this.messerLife.x = this.player.x - this.cameras.main.scrollX - 200;
-         this.messerLife.y = this.player.y - this.cameras.main.scrollY - 175;
-         this.messerLifeBackground.x = this.player.x - this.cameras.main.scrollX - 200;
-         this.messerLifeBackground.y = this.player.y - this.cameras.main.scrollY - 175;
-         this.nomeText.x = this.player.x - this.cameras.main.scrollX - 40;
-         this.nomeText.y = this.player.y - this.cameras.main.scrollY - 165;
- 
+        this.naiffsNPC.body.setSize(20, 50);
 
-        //bossfight attributes for messer
-        this.messer.circle
+        this.naiffsNPC.setFrame(27);
+
 
         // criação da colisão com camadas
         this.wallsLayer.setCollisionBetween(65, 750, true);
         this.physics.add.collider(this.player, this.wallsLayer);
-        this.physics.add.collider(this.messer, this.wallsLayer)
+        this.physics.add.collider(this.player, this.naiffsNPC, function(player, naiffsNPC){
+            naiffsNPC.setVelocity(0);
+            naiffsNPC.body.setImmovable(true);
+            
+        });
+
+        this.physics.add.collider(this.player, this.barrier, function(player, barrier){
+            barrier.setVelocity(0);
+            barrier.body.setImmovable(true);
+            
+        });
         
         // ligação das teclas de movimento
         this.keyA = this.input.keyboard.addKey('A');
@@ -138,20 +80,26 @@ class Fase1 extends Phaser.Scene{
         this.keySPACE = this.input.keyboard.addKey('SPACE');
 
         //criacao das zonas
-        this.zone_dlg_meilin = this.add.zone(98, 55).setSize(50, 50);
-        this.physics.world.enable(this.zone_dlg_meilin);
-        this.physics.add.overlap(this.player, this.zonezone_dlg_meilin);
+        this.zone_dlg = this.add.zone(30, 200).setSize(100, 100);
+        this.physics.world.enable(this.zone_dlg);
+        this.physics.add.overlap(this.player, this.zone_dlg);
 
-        this.zone_boss = this.add.zone(messer_pos.x -20, messer_pos.y - 20).setSize(50, 50)
-        this.physics.world.enable(this.zone_boss)
-        this.physics.add.overlap(this.player, this.zone_boss)
-
-
-        /*
         this.zone_ques = this.add.zone(200,80).setSize(100,70);
         this.physics.world.enable(this.zone_ques);
         this.physics.add.overlap(this.player, this.zone_ques);
-*/
+        this.zone_ques2 = this.add.zone(649,148).setSize(100,70);
+        this.physics.world.enable(this.zone_ques2);
+        this.physics.add.overlap(this.player, this.zone_ques2);
+        
+        this.zone_ques3 = this.add.zone(500,422).setSize(100,70);
+        this.physics.world.enable(this.zone_ques3);
+        this.physics.add.overlap(this.player, this.zone_ques3);
+        
+        this.zone_ques4 = this.add.zone(500,650).setSize(100,70);
+        this.physics.world.enable(this.zone_ques4);
+        this.physics.add.overlap(this.player, this.zone_ques4);
+
+
         // criação da mensagem "pressione E para interagir"
         var px = this.cameras.main.width*0.35;  // pos horizontal
         var py = 2*this.cameras.main.height/3;  // pos vertical
@@ -163,23 +111,20 @@ class Fase1 extends Phaser.Scene{
             stroke: '#000000',
             strokeThickness: 4,
         });
-
-
         this.interact_txt.setScrollFactor(0);  // deixa em posição relativa à camera (e não ao mapa)
         this.interact_txt.setVisible(false);   // deixa invisível
 
         // criação de lista de textos (diálogs) e do objeto dialogs
-        var textos = ["Olá, jogador. Temo lhe dizer que o encontro em apuros.", "A saída desse jardim é logo a frente, mas sinto uma força descomunal que a bloqueia.", "Tenho uma arma que pode lhe ser útil, mas preciso que me responda:"];
-        this.txtLst_0 = textos.map(text => `Meilin:\n${text}`)
-
-        var messer_text = ['Você sobreviveu ao corredor de esqueletos, vejo.', 'Nunca pensei que chegaria tão longe, jovem guerreiro. Talvez eu tenha te subestimado, hehe.', 'De qualquer forma, sua curta jornada aqui termina:', 'Você entenderá porquê sou chamado de Messer Khenaifes, o lorde das facas!!']
-
-        this.txtLst_1 = messer_text.map(text => `Messer:\n${text}`)
-
-
+        this.txtLst_0 = ["Eu estava te esperando! Seja bem vindo, jogador. Meu nome é Knaíffes, mas pode me chamar de facas.", "Daqui em diante aparecerão inimigos que voce precisará derrotar e perguntas que voce precisará responder.", "Ao responder corretamente, o muro se abrirá e você receberá mais inimigos.", "Porém, cuidado. Ao final desse desafio estará um ser de força incomum. Esteja preparado."];
         this.quest_0 = ["Para produzir bolos, uma fábrica utiliza 5 bandejas de ovos por dia. Sabendo que em uma bandeja tem 30 ovos, quantos ovos serão necessários para produção de bolos no período de 15 dias?",
-        1, "◯ 75", "◯ 150",  "◯ 450",  "◯ 2250"]
+        4, "◯ 75", "◯ 150",  "◯ 450",  "◯ 2250"]
         
+        this.quest_1 = ["O esporte ‘skate’ ganhou muita popularidade com o surgimento das olimpíadas de esportes radicais. Uma das manobras mais difíceis de serem executas é um giro de 900°, onde o skatista gira no ar a seguinte quantidade de vezes:",2, "◯ 1 vez", "◯ 2 1/2 vezes",  "◯ 1 1/2 vezes",  "◯ 2 vezes"]
+        
+        this.quest_2 = ["Em um projeto para a construção de um cinema, os arquitetos estão avaliando a relação entre a quantidade de fileiras e a quantidade de cadeiras em cada fileira. O projeto inicial prevê uma sala para 304 pessoas. No caso de utilizarem 19 fileiras, o número de cadeiras por fileira será",3, "◯ 14.", "◯ 15.",  "◯ 16.",  "◯ 13."]
+        
+        this.quest_3 = ["A turma de Carlos possui 28 alunos, dos quais 1/4 são meninas. Sabendo disso, qual das opções abaixo representa o número de meninos?",4, "◯ 8.", "◯ 7.",  "◯ 14.",  "◯ 21."]
+
 
         this.dialogs = new dialogs(this);   
 
@@ -187,161 +132,30 @@ class Fase1 extends Phaser.Scene{
         this.spacePressed = false;
 
 
-        //animação de corrida do player
         this.anims.create({
             key: 'run',
             frames: this.anims.generateFrameNumbers('player_sp', {frames: [24, 25, 26, 27]}),
             frameRate: 10,
             repeat: 0
             });
-
         this.anims.create({
-            key: 'meilin_talk',
-                frames: this.anims.generateFrameNumbers('meilin', {frames: [91, 92, 93, 94, 95, 91]}),
+            key: 'talk_knaiffs',
+                frames: this.anims.generateFrameNumbers('knaiffs_sp', {frames: [91, 92, 93, 94, 95, 91]}),
                 frameRate: 10,
                 repeat: 0
                 });
-        
-        //animação de interação com Meilin
-        this.anims.create({
-            key: 'meilin_stand',
-            frames: this.anims.generateFrameNumbers('meilin', {frames: [91]}),
-            frameRate: 10,
-            repeat: 1
-        })
 
-        this.anims.create({
-            key: 'knives_cast',
-            frames: this.anims.generateFrameNumbers('knaiffs_sp', {frames: [28, 29, 30]}),
-            frameRate: 5,
-            repeat: 0
-        })
-
-        this.anims.create({
-            key: 'knives_storm',
-            frames: this.anims.generateFrameNumbers('knaiffs_sp', {frames: [31, 5, 18, 44]}),
-            frameRate: 10,
-            repeat: 1
-        })
-
-
-        this.anims.create({
-            key: 'knives_falls',
-            frames: this.anims.generateFrameNumbers('knaiffs_sp', {frames: [261, 262, 263, 264]}),
-            frameRate: 5,
-            repeat: 0
-        })
-
-        this.anims.create({
-            key: 'knives_stands',
-            frames: this.anims.generateFrameNumbers('knaiffs_sp', {frames: [264, 263, 262, 261]}),
-            frameRate: 5,
-            repeat: 0
-        })
 
         }
-
-
 
 
 // update é chamada a cada novo quadro
     update (){
-        this.gameTimer += 0.1
-
-        if(this.player.hasShield){
-            this.shield.setPosition(this.player.body.x, this.player.body.y)
-            this.shield.setVisible(true)
-            if(this.keyE?.isDown){
-                this.shield.setRotation(this.gameTimer*3)
-            }
-        }
-
-
-        const arenaHeight = 736
-        const arenaWidth = 466
-
-        const ease = 2 // the higher, the easier
-        const prob = Math.floor(Math.random()*ease)
-
-        if(this.player.hp <= 0){
-            this.scene.restart()
-            this.boss_bgm.stop()
-            this.death.play()
-        } 
         
-
-        const spawnKnife = (t) => {
-            const knife= this.physics.add.sprite(this.messer.body.x, this.messer.body.y, 'knife')
-            knife.isDeflected = false
-            //knife.setImmovable(true)
-            this.physics.world.enable(knife)
-            knife.body.setAllowGravity(false)
-            knife.setScale(-0.02)
-            knife.angle = t
-
-            const rand = Math.floor(Math.random()*5)
-
-            knife.body.setVelocity(200*Math.cos(t*100)+20*rand*Math.sin(t*100) + rand*Math.cos(t)*Math.sin(t), 50*Math.sin(t*100)+20*rand*Math.cos(t*100)+rand*Math.cos(t)*Math.sin(t))
-            
-            
-            this.dash.play()
-            this.physics.add.collider(knife, this.wallsLayer, ()=>{
-                knife.destroy()
-            })
-            this.physics.add.collider(knife, this.player, ()=> {
-                if(this.player.hasShield && this.keyE?.isDown){
-                    knife.body.setVelocity(-knife.body.velocity.x*2, -knife.body.velocity.y*2)
-                    knife.isDeflected = true
-                }else{
-                    this.player.hp = this.player.hp - 10
-                    this.damage.play()
-                    knife.destroy()
-                }
-            this.physics.add.collider(knife, this.messer, ()=> {
-                if(knife.isDeflected){
-                    console.log('Messer foi atingido')
-                    this.messer.hp =- 100
-                    this.messerLife.setSize(0.4*this.messer.hp, this.healthHeight) //this.add.rectangle(0, 0, 0.4*this.messer.hp, this.healthHeight, 0xff0000);
-                }
-            })
-
-            })
-        }
-
-        const messerMoves = (t) => {
-            this.messer.setPosition(512 - Math.cos(t) * this.circleRadius, 384 - Math.sin(t) * this.circleRadius)
-            //this.messer.setVelocity((dx)*Math.cos(t)*300*Math.pow(Math.sin(t), 2)/Math.sqrt(dx*dx+dy*dy), (dy)*Math.cos(t)*300*Math.pow(Math.sin(t), 2)/Math.sqrt(dx*dx+dy*dy))
-            
-            // Messer's magic circle
-            this.messer.circle.x = this.messer.body.x + 20
-            this.messer.circle.y = this.messer.body.y + 40
-            this.messer.circle.setRotation(Math.PI*2*t)
-            
-        }
-
-        const messerKnives = () => {
-            this.messer.anims.play('knives_storm', true)
-            if(prob == 0){ // difficulty controller
-                spawnKnife(this.t)
-            }
-            messerMoves(this.t)
-            this.t += 0.01
-        }
-
-        if(this.boss){
-            this.messerLife.setVisible(true);
-            this.messerLifeBackground.setVisible(true);
-            this.nomeText.setVisible(true);
-            messerKnives()
-        }
-
-
      // verifica e trata se jogador em zona ativa
         this.checkActiveZone();
-
-
         if(this.dialogs.isActive){
-            this.meilin.anims.play('meilin_stand', true);
+            this.naiffsNPC.anims.play('talk_knaiffs', true);
         }
         // verifica se precisa avançar no diálogo
         if (this.dialogs.isActive && !this.spacePressed && this.keySPACE.isDown){
@@ -352,13 +166,15 @@ class Fase1 extends Phaser.Scene{
         if (!this.keySPACE.isDown){
             this.spacePressed = false;
         }
-
         {
+
+         
             if (this.keyD?.isDown) {
                 this.player.setVelocityX(210);
                 this.player.anims.play('run', true);
         }
         else if (this.keyA?.isDown) {
+            console.log(this.player.x + " " + this.player.y)
             this.player.setVelocityX(-210);
             this.player.anims.play('run', true);
         }
@@ -386,6 +202,7 @@ class Fase1 extends Phaser.Scene{
     checkActiveZone(){
         // se jogador dentro de zona e o diálogo não está ativo
         if (this.player.body.embedded && !this.dialogs.isActive){
+            // mostra a mensagem e verifica a tecla pressionada
             this.interact_txt.setVisible(true);
             if (this.keyE.isDown){
                 this.startDialogsOrQuestion();
@@ -397,37 +214,34 @@ class Fase1 extends Phaser.Scene{
         }
     }
 
-            //264, 752-608
-
-    createBarrier(n){
-        let yi = 771
-        for(let i = 0; i<n; i++){
-            let barrier= this.physics.add.sprite(279, 771-26*i, 'barrier')
-            barrier.setScale(0.05)
-            barrier.setImmovable(true)
-            this.physics.add.collider(this.player, barrier);
-
-        }
-    }
-
     startDialogsOrQuestion(){
-        if (this.physics.overlap(this.player, this.zone_dlg_meilin)){
+        if (this.physics.overlap(this.player, this.zone_dlg)){
                 this.dialogs.updateDlgBox(this.txtLst_0);
+        
         }
-        if(this.physics.overlap(this.player, this.zone_boss)){ 
-            this.dialogs.updateDlgBox(this.txtLst_1)
+        if (this.physics.overlap(this.player, this.zone_ques)){
+            this.dialogs.scene.dialogs.makeQuestion(this.quest_0, acertou_fcn, errou_fcn);
+        }
+        if (this.physics.overlap(this.player, this.zone_ques2)){
+            this.dialogs.scene.dialogs.makeQuestion(this.quest_1, acertou_fcn, errou_fcn);
+        }
 
-            this.boss_bgm.play()
-            this.zone_boss.destroy()
-            this.messer.anims.play('knives_cast', true)
-            this.warning.play()
-            this.messer.circle= this.add.sprite(this.messer.body.x+20, this.messer.body.y+40, 'circle')
-            this.messer.circle.setScale(0.1)
-            this.createBarrier(7)
-            this.time.delayedCall(3000, ()=>{
-                this.boss = true
-            
-            }, [], this);              
+        if (this.physics.overlap(this.player, this.zone_ques3)){
+            this.dialogs.scene.dialogs.makeQuestion(this.quest_2, acertou_fcn, errou_fcn);
+        }
+
+        if (this.physics.overlap(this.player, this.zone_ques4)){
+            this.dialogs.scene.dialogs.makeQuestion(this.quest_3, acertou_fcn, errou_fcn);
         }
     }
+}
+
+function acertou_fcn(ptr){
+    console.log("acertou");
+    this.dialogs.hideBox();
+}
+
+function errou_fcn(ptr){
+    console.log("errou")
+    this.dialogs.hideBox();
 }
