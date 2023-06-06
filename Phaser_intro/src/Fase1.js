@@ -40,6 +40,23 @@ class Fase1 extends Phaser.Scene{
         this.barrier2.setScale(0.05)
         this.barrier2.setImmovable(true)
 
+        this.barrier3 = this.physics.add.sprite(480, 432, 'barrier_sp', 0);
+        this.barrier3.setScale(0.05)
+        this.barrier3.setImmovable(true)
+
+        this.barrier4 = this.physics.add.sprite(480, 464, 'barrier_sp', 0);
+        this.barrier4.setScale(0.05)
+        this.barrier4.setImmovable(true)
+
+        this.barrier5 = this.physics.add.sprite(618, 672, 'barrier_sp', 0);
+        this.barrier5.setScale(0.05)
+        this.barrier5.setImmovable(true)
+
+        this.barrier6 = this.physics.add.sprite(618, 704, 'barrier_sp', 0);
+        this.barrier6.setScale(0.05)
+        this.barrier6.setImmovable(true)
+
+
         // criação do personagem
         this.player = this.physics.add.sprite(65, 750, 'player_sp', 0);
         this.cameras.main.startFollow(this.player);
@@ -70,6 +87,36 @@ class Fase1 extends Phaser.Scene{
             barrier.body.setImmovable(true);
             
         });
+
+        this.physics.add.collider(this.player, this.barrier2, function(player, barrier2){
+            barrier2.setVelocity(0);
+            barrier2.body.setImmovable(true);
+            
+        });
+
+        this.physics.add.collider(this.player, this.barrier3, function(player, barrier3){
+            barrier3.setVelocity(0);
+            barrier3.body.setImmovable(true);
+            
+        });
+
+        this.physics.add.collider(this.player, this.barrier4, function(player, barrier4){
+            barrier4.setVelocity(0);
+            barrier4.body.setImmovable(true);
+            
+        });
+
+        this.physics.add.collider(this.player, this.barrier5, function(player, barrier5){
+            barrier5.setVelocity(0);
+            barrier5.body.setImmovable(true);
+            
+        });
+
+        this.physics.add.collider(this.player, this.barrier6, function(player, barrier6){
+            barrier6.setVelocity(0);
+            barrier6.body.setImmovable(true);
+            
+        });
         
         // ligação das teclas de movimento
         this.keyA = this.input.keyboard.addKey('A');
@@ -87,9 +134,6 @@ class Fase1 extends Phaser.Scene{
         this.zone_ques = this.add.zone(200,80).setSize(100,70);
         this.physics.world.enable(this.zone_ques);
         this.physics.add.overlap(this.player, this.zone_ques);
-        this.zone_ques2 = this.add.zone(649,148).setSize(100,70);
-        this.physics.world.enable(this.zone_ques2);
-        this.physics.add.overlap(this.player, this.zone_ques2);
         
         this.zone_ques3 = this.add.zone(500,422).setSize(100,70);
         this.physics.world.enable(this.zone_ques3);
@@ -121,9 +165,7 @@ class Fase1 extends Phaser.Scene{
         
         this.quest_1 = ["O esporte ‘skate’ ganhou muita popularidade com o surgimento das olimpíadas de esportes radicais. Uma das manobras mais difíceis de serem executas é um giro de 900°, onde o skatista gira no ar a seguinte quantidade de vezes:",2, "◯ 1 vez", "◯ 2 1/2 vezes",  "◯ 1 1/2 vezes",  "◯ 2 vezes"]
         
-        this.quest_2 = ["Em um projeto para a construção de um cinema, os arquitetos estão avaliando a relação entre a quantidade de fileiras e a quantidade de cadeiras em cada fileira. O projeto inicial prevê uma sala para 304 pessoas. No caso de utilizarem 19 fileiras, o número de cadeiras por fileira será",3, "◯ 14.", "◯ 15.",  "◯ 16.",  "◯ 13."]
-        
-        this.quest_3 = ["A turma de Carlos possui 28 alunos, dos quais 1/4 são meninas. Sabendo disso, qual das opções abaixo representa o número de meninos?",4, "◯ 8.", "◯ 7.",  "◯ 14.",  "◯ 21."]
+        this.quest_2 = ["A turma de Carlos possui 28 alunos, dos quais 1/4 são meninas. Sabendo disso, qual das opções abaixo representa o número de meninos?",4, "◯ 8.", "◯ 7.",  "◯ 14.",  "◯ 21."]
 
 
         this.dialogs = new dialogs(this);   
@@ -174,7 +216,6 @@ class Fase1 extends Phaser.Scene{
                 this.player.anims.play('run', true);
         }
         else if (this.keyA?.isDown) {
-            console.log(this.player.x + " " + this.player.y)
             this.player.setVelocityX(-210);
             this.player.anims.play('run', true);
         }
@@ -222,16 +263,13 @@ class Fase1 extends Phaser.Scene{
         if (this.physics.overlap(this.player, this.zone_ques)){
             this.dialogs.scene.dialogs.makeQuestion(this.quest_0, acertou_fcn, errou_fcn);
         }
-        if (this.physics.overlap(this.player, this.zone_ques2)){
-            this.dialogs.scene.dialogs.makeQuestion(this.quest_1, acertou_fcn, errou_fcn);
-        }
 
         if (this.physics.overlap(this.player, this.zone_ques3)){
-            this.dialogs.scene.dialogs.makeQuestion(this.quest_2, acertou_fcn, errou_fcn);
+            this.dialogs.scene.dialogs.makeQuestion(this.quest_1, acertou_fcn2, errou_fcn);
         }
 
         if (this.physics.overlap(this.player, this.zone_ques4)){
-            this.dialogs.scene.dialogs.makeQuestion(this.quest_3, acertou_fcn, errou_fcn);
+            this.dialogs.scene.dialogs.makeQuestion(this.quest_2, acertou_fcn3, errou_fcn);
         }
     }
 }
@@ -239,7 +277,27 @@ class Fase1 extends Phaser.Scene{
 function acertou_fcn(ptr){
     console.log("acertou");
     this.dialogs.hideBox();
+
+    this.barrier.destroy()
+    this.barrier2.destroy()
 }
+
+function acertou_fcn2(ptr){
+    console.log("acertou");
+    this.dialogs.hideBox();
+
+    this.barrier3.destroy()
+    this.barrier4.destroy()
+}
+
+function acertou_fcn3(ptr){
+    console.log("acertou");
+    this.dialogs.hideBox();
+
+    this.barrier5.destroy()
+    this.barrier6.destroy()
+}
+
 
 function errou_fcn(ptr){
     console.log("errou")
